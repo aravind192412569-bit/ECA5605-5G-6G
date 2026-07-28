@@ -1,0 +1,94 @@
+
+clc;
+clear;
+close all;
+
+% 5G Core Traffic Routing Simulation
+
+% User density
+users = 50:50:1000;
+N = length(users);
+
+% Mobility speed (km/h)
+mobility = linspace(5,120,N);
+
+% Core network capacity (Mbps)
+coreCapacity = 10000;
+
+% Demand per user (Mbps)
+demandPerUser = 8;
+
+% Arrays
+latency = zeros(1,N);
+throughput = zeros(1,N);
+resourceUtil = zeros(1,N);
+routingEfficiency = zeros(1,N);
+
+for i = 1:N
+
+    offeredLoad = users(i) * demandPerUser;
+
+    % Resource utilization
+    resourceUtil(i) = min(100, (offeredLoad/coreCapacity)*100);
+
+    % Congestion factor
+    congestion = resourceUtil(i)/100;
+
+    % Latency
+    latency(i) = 5 + 20*congestion + 0.08*mobility(i);
+
+    % Throughput
+    throughput(i) = min(coreCapacity, offeredLoad) * ...
+                    (1 - 0.002*mobility(i));
+
+    if throughput(i) < 0
+        throughput(i) = 0;
+    end
+
+    % Routing efficiency
+    routingEfficiency(i) = max(50, ...
+        100 - 0.25*resourceUtil(i) - 0.12*mobility(i));
+end
+
+% Display results
+disp('Users  Mobility(km/h)  Latency(ms)  Throughput(Mbps)  ResourceUtil(%)  RoutingEff(%)');
+disp([users' mobility' latency' throughput' resourceUtil' routingEfficiency']);
+
+% Graphs
+figure('Name','5G Core Traffic Routing Simulation');
+
+subplot(2,2,1);
+plot(users, latency,'-o','LineWidth',2);
+grid on;
+xlabel('User Density');
+ylabel('Latency (ms)');
+title('Latency vs User Density');
+
+subplot(2,2,2);
+plot(users, throughput,'-s','LineWidth',2);
+grid on;
+xlabel('User Density');
+ylabel('Throughput (Mbps)');
+title('Throughput vs User Density');
+
+subplot(2,2,3);
+plot(users, resourceUtil,'-^','LineWidth',2);
+grid on;
+xlabel('User Density');
+ylabel('Resource Utilization (%)');
+title('Resource Utilization');
+
+subplot(2,2,4);
+plot(users, routingEfficiency,'-d','LineWidth',2);
+grid on;
+xlabel('User Density');
+ylabel('Routing Efficiency (%)');
+title('Routing Efficiency');
+
+sgtitle('5G Core Traffic Routing under Density and Mobility');
+
+% Summary
+fprintf('\nMaximum Throughput : %.2f Mbps\n', max(throughput));
+fprintf('Minimum Latency    : %.2f ms\n', min(latency));
+fprintf('Maximum Resource Utilization : %.2f %%\n', max(resourceUtil));
+fprintf('Average Routing Efficiency   : %.2f %%\n', mean(routingEfficiency));
